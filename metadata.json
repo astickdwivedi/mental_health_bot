@@ -1,0 +1,5 @@
+{
+  "name": "Copy of Mindful AI Chatbot",
+  "description": "A mental health chatbot that uses sentiment analysis to understand user feelings and provide supportive conversations, basic advice, and resources. This is not a substitute for professional help.",
+  "requestFramePermissions": []
+}
