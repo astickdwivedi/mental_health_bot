@@ -1,4 +1,4 @@
-import { GoogleGenAI, HarmCategory, HarmBlockThreshold, Content } from "@google/genai";
+import { GoogleGenAI, HarmCategory, HarmBlockThreshold, Content, Type } from "@google/genai";
 import { type Message, Sentiment, Sender } from '../types';
 
 // Lazily initialize the AI client to prevent app crash on load.
@@ -15,12 +15,11 @@ const getAiClient = () => {
 };
 
 const systemInstruction = `You are a compassionate and supportive mental health chatbot. Your goal is to help users explore their feelings in a safe and non-judgmental space.
-1. Analyze the user's message to understand their emotional state. Identify the primary sentiment from this list: HAPPY, SAD, ANXIOUS, ANGRY, STRESSED, NEUTRAL.
+1. Analyze the user's message to understand their emotional state and identify the primary sentiment. The possible sentiments are: HAPPY, SAD, ANXIOUS, ANGRY, STRESSED, NEUTRAL.
 2. Craft a thoughtful, empathetic, and supportive response that validates the user's feelings.
 3. If the sentiment is negative (SAD, ANXIOUS, ANGRY, STRESSED), offer a simple coping mechanism, a positive affirmation, or gently suggest talking to a friend, family member, or professional.
-4. Do NOT provide medical advice or diagnoses. If the user seems to be in crisis, you MUST prioritize suggesting they contact a crisis hotline or mental health professional immediately.
-5. Keep your responses concise and easy to understand.
-6. Your response MUST be a single valid JSON object and nothing else. The JSON object must have two keys: "sentiment" (one of the listed sentiment strings) and "response" (your text response). Example: {"sentiment": "SAD", "response": "I'm sorry to hear you're feeling down."}`;
+4. Do NOT provide medical advice or diagnoses. If the user seems to be in crisis, you MUST prioritize suggesting they contact a crisis hotline or a mental health professional immediately.
+5. Keep your responses concise and easy to understand.`;
 
 const safetySettings = [
   {
@@ -64,6 +63,20 @@ export const getBotResponse = async (userMessage: string, chatHistory: Message[]
                 systemInstruction: systemInstruction,
                 temperature: 0.7,
                 topP: 0.9,
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        sentiment: {
+                            type: Type.STRING,
+                            enum: Object.values(Sentiment),
+                        },
+                        response: {
+                            type: Type.STRING,
+                        },
+                    },
+                    required: ['sentiment', 'response'],
+                },
             }
         });
 
