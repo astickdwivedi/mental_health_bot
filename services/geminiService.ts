@@ -40,6 +40,25 @@ const safetySettings = [
   },
 ];
 
+export const generateChatTitle = async (firstUserMessage: string): Promise<string> => {
+    try {
+        const aiClient = getAiClient();
+        const response = await aiClient.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: `Summarize the following user message into a short, descriptive title of 5 words or less. Your response must be only the title itself, with no extra formatting or commentary. Message: "${firstUserMessage}"`,
+            config: {
+                temperature: 0.2,
+                stopSequences: ['\n'],
+            }
+        });
+
+        return response.text.trim().replace(/^"|"$/g, '');
+    } catch (error) {
+        console.error("Error generating chat title:", error);
+        return firstUserMessage.substring(0, 30) + '...';
+    }
+}
+
 
 export const getBotResponse = async (userMessage: string, chatHistory: Message[]): Promise<{ sentiment: Sentiment; response: string }> => {
     try {

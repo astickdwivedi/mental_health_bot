@@ -14,7 +14,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-slate-100 dark:bg-slate-900 font-sans">
+    <div className="h-screen bg-slate-100 dark:bg-slate-900 font-sans">
       {isLoggedIn ? (
         <ChatPage onLogout={handleLogout} />
       ) : (

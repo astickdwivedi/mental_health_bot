@@ -19,3 +19,10 @@ export interface Message {
   sender: Sender;
   sentiment?: Sentiment;
 }
+
+export interface ChatSession {
+  id: string;
+  title: string;
+  messages: Message[];
+  lastUpdated: number;
+}
