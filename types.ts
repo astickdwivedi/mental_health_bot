@@ -21,7 +21,7 @@ export interface Message {
 }
 
 export interface ChatSession {
-  id: string;
+  id:string;
   title: string;
   messages: Message[];
   lastUpdated: number;
