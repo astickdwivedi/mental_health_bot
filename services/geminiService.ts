@@ -1,11 +1,18 @@
 import { GoogleGenAI, Type, HarmCategory, HarmBlockThreshold, Content } from "@google/genai";
 import { type Message, Sentiment, Sender } from '../types';
 
-if (!process.env.API_KEY) {
-    throw new Error("API_KEY environment variable is not set");
-}
+// Lazily initialize the AI client to prevent app crash on load.
+let ai: GoogleGenAI | null = null;
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const getAiClient = () => {
+    if (!ai) {
+        if (!process.env.API_KEY) {
+            throw new Error("API_KEY environment variable is not set. Please ensure it is configured correctly.");
+        }
+        ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    }
+    return ai;
+};
 
 const systemInstruction = `You are a compassionate and supportive mental health chatbot. Your goal is to help users explore their feelings in a safe and non-judgmental space.
 1. Analyze the user's message to understand their emotional state. Identify the primary sentiment from this list: HAPPY, SAD, ANXIOUS, ANGRY, STRESSED, NEUTRAL.
@@ -37,6 +44,8 @@ const safetySettings = [
 
 export const getBotResponse = async (userMessage: string, chatHistory: Message[]): Promise<{ sentiment: Sentiment; response: string }> => {
     try {
+        const aiClient = getAiClient();
+
         const contents: Content[] = chatHistory.map(msg => ({
             role: msg.sender === Sender.User ? 'user' : 'model',
             parts: [{ text: msg.text }],
@@ -47,7 +56,7 @@ export const getBotResponse = async (userMessage: string, chatHistory: Message[]
             parts: [{text: userMessage}]
         });
 
-        const response = await ai.models.generateContent({
+        const response = await aiClient.models.generateContent({
             model: "gemini-2.5-flash",
             contents: contents,
             safetySettings,
@@ -80,9 +89,7 @@ export const getBotResponse = async (userMessage: string, chatHistory: Message[]
         return data as { sentiment: Sentiment; response: string };
     } catch (error) {
         console.error("Error fetching bot response:", error);
-        return {
-            sentiment: Sentiment.Neutral,
-            response: "I'm sorry, I'm having a little trouble understanding right now. Could you please try rephrasing?"
-        };
+        // Re-throw the error to be handled by the UI component
+        throw error;
     }
 };

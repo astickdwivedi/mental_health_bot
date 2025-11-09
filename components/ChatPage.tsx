@@ -5,6 +5,7 @@ import { getBotResponse } from '../services/geminiService';
 import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
 import LogoutIcon from './icons/LogoutIcon';
+import SentimentTracker from './SentimentTracker';
 
 interface ChatPageProps {
     onLogout: () => void;
@@ -70,6 +71,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ onLogout }) => {
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-2xl mx-auto">
           This is an AI for supportive conversations. It is not a substitute for professional medical advice. If you are in a crisis, please contact a local emergency number.
         </p>
+        <SentimentTracker messages={messages} />
         <button onClick={onLogout} className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" aria-label="Logout">
             <LogoutIcon />
         </button>
