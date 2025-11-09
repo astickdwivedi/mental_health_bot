@@ -1,4 +1,4 @@
-import { GoogleGenAI, Type, HarmCategory, HarmBlockThreshold, Content } from "@google/genai";
+import { GoogleGenAI, HarmCategory, HarmBlockThreshold, Content } from "@google/genai";
 import { type Message, Sentiment, Sender } from '../types';
 
 // Lazily initialize the AI client to prevent app crash on load.
@@ -20,7 +20,7 @@ const systemInstruction = `You are a compassionate and supportive mental health 
 3. If the sentiment is negative (SAD, ANXIOUS, ANGRY, STRESSED), offer a simple coping mechanism, a positive affirmation, or gently suggest talking to a friend, family member, or professional.
 4. Do NOT provide medical advice or diagnoses. If the user seems to be in crisis, you MUST prioritize suggesting they contact a crisis hotline or mental health professional immediately.
 5. Keep your responses concise and easy to understand.
-6. You MUST respond in the specified JSON format.`;
+6. Your response MUST be a single valid JSON object and nothing else. The JSON object must have two keys: "sentiment" (one of the listed sentiment strings) and "response" (your text response). Example: {"sentiment": "SAD", "response": "I'm sorry to hear you're feeling down."}`;
 
 const safetySettings = [
   {
@@ -62,29 +62,16 @@ export const getBotResponse = async (userMessage: string, chatHistory: Message[]
             safetySettings,
             config: {
                 systemInstruction: systemInstruction,
-                responseMimeType: "application/json",
-                responseSchema: {
-                    type: Type.OBJECT,
-                    properties: {
-                        sentiment: {
-                            type: Type.STRING,
-                            enum: Object.values(Sentiment),
-                            description: 'The dominant sentiment detected in the user\'s message.'
-                        },
-                        response: {
-                            type: Type.STRING,
-                            description: 'Your empathetic and supportive response to the user.'
-                        }
-                    },
-                    required: ['sentiment', 'response']
-                },
                 temperature: 0.7,
                 topP: 0.9,
             }
         });
 
         const jsonText = response.text.trim();
-        const data = JSON.parse(jsonText);
+        // The model can sometimes wrap the JSON in ```json ... ``` which we need to remove.
+        const cleanedJsonText = jsonText.replace(/^```json\s*/, '').replace(/```$/, '');
+        const data = JSON.parse(cleanedJsonText);
+
 
         return data as { sentiment: Sentiment; response: string };
     } catch (error) {
